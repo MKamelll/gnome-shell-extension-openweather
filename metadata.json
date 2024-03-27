@@ -2,7 +2,8 @@
   "name": "OpenWeather",
   "description": "Display weather information for any location on Earth in the GNOME Shell",
   "shell-version": [
-    "46"
+    "46",
+    "45"
   ],
   "url": "https://github.com/toppk/gnome-shell-extension-openweather",
   "uuid": "openweather-extension@jenslody.de",

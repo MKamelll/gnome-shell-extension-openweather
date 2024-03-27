@@ -31,6 +31,7 @@ import * as PanelMenu from "resource:///org/gnome/shell/ui/panelMenu.js";
 import * as PopupMenu from "resource:///org/gnome/shell/ui/popupMenu.js";
 
 import * as GnomeSession from "resource:///org/gnome/shell/misc/gnomeSession.js";
+import * as Config from "resource:///org/gnome/shell/misc/config.js";
 
 import * as OpenWeatherMap from "./openweathermap.js";
 import {
@@ -56,6 +57,33 @@ Gtk.IconTheme.get_default = function () {
   return theme;
 };
 
+const GNOME_VERSION = Config.PACKAGE_VERSION;
+const IS_46 = GNOME_VERSION.startsWith("46");
+
+function add_childern(obj, ...childern) {
+  if (IS_46) {
+    for (let child of childern) {
+      obj.add_child(child);
+    }
+  } else {
+    for (let actor of childern) {
+      obj.add_actor(actor);
+    }
+  }
+}
+
+function remove_childern(obj, ...childern) {
+  if (IS_46) {
+    for (let child of childern) {
+      obj.remove_child(child);
+    }
+  } else {
+    for (let actor of childern) {
+      obj.remove_actor(actor);
+    }
+  }
+}
+
 class OpenWeatherMenuButton extends PanelMenu.Button {
   static {
     GObject.registerClass(this);
@@ -79,9 +107,9 @@ class OpenWeatherMenuButton extends PanelMenu.Button {
     let topBox = new St.BoxLayout({
       style_class: "panel-status-menu-box",
     });
-    topBox.add_child(this._weatherIcon);
-    topBox.add_child(this._weatherInfo);
-    this.add_child(topBox);
+
+    add_childern(topBox, this._weatherIcon, this._weatherInfo);
+    add_childern(this, topBox);
 
     if (Main.panel._menus === undefined)
       Main.panel.menuManager.addMenu(this.menu);
@@ -711,11 +739,10 @@ class OpenWeatherMenuButton extends PanelMenu.Button {
       "preferences-system-symbolic",
       _("Weather Settings")
     );
-
-    this._buttonBox1.add_child(this._locationButton);
-    this._buttonBox1.add_child(this._reloadButton);
-    this._buttonBox2.add_child(this._urlButton);
-    this._buttonBox2.add_child(this._prefsButton);
+  
+    add_childern(this._buttonBox1, this._locationButton, this._reloadButton);
+    
+    add_childern(this._buttonBox2, this._urlButton, this._prefsButton);
 
     this._locationButton.connect("clicked", () => {
       this._selectCity._setOpenState(!this._selectCity._getOpenState());
@@ -749,8 +776,7 @@ class OpenWeatherMenuButton extends PanelMenu.Button {
       this._onPreferencesActivate.bind(this)
     );
 
-    this._buttonMenu.actor.add_child(this._buttonBox1);
-    this._buttonMenu.actor.add_child(this._buttonBox2);
+    add_childern(this._buttonMenu.actor, this._buttonBox1, this._buttonBox2);
   }
 
   rebuildSelectCityItem() {
@@ -989,7 +1015,7 @@ class OpenWeatherMenuButton extends PanelMenu.Button {
       this._first_run ||
       this._old_position_index !== this._position_index
     ) {
-      this.get_parent().remove_child(this);
+      remove_childern(this.get_parent(), this);
 
       let children = null;
       switch (this._position_in_panel) {
@@ -1265,8 +1291,8 @@ class OpenWeatherMenuButton extends PanelMenu.Button {
       y_align: Clutter.ActorAlign.CENTER,
       style_class: "system-menu-action openweather-current-summarybox",
     });
-    bb.add_child(this._currentWeatherLocation);
-    bb.add_child(this._currentWeatherSummary);
+    
+    add_childern(bb, this._currentWeatherLocation, this._currentWeatherSummary);
 
     this._currentWeatherSunrise = new St.Label({
       text: "-",
@@ -1283,13 +1309,7 @@ class OpenWeatherMenuButton extends PanelMenu.Button {
       style_class: "openweather-current-infobox",
     });
 
-    ab.add_child(this._sunriseIcon);
-    ab.add_child(this._currentWeatherSunrise);
-    ab.add_child(this._sunsetIcon);
-    ab.add_child(this._currentWeatherSunset);
-    ab.add_child(this._buildIcon);
-    ab.add_child(this._currentWeatherBuild);
-    bb.add_child(ab);
+    add_childern(ab, this._sunriseIcon, this._currentWeatherSunrise, this._sunsetIcon, this._currentWeatherSunset);
 
     // Other labels
     this._currentWeatherFeelsLike = new St.Label({
@@ -1323,54 +1343,44 @@ class OpenWeatherMenuButton extends PanelMenu.Button {
       vertical: true,
       style_class: "system-menu-action openweather-current-databox-values",
     });
-    rb.add_child(rb_captions);
-    rb.add_child(rb_values);
 
-    rb_captions.add_child(
-      new St.Label({
-        text: _("Feels Like:"),
-      })
-    );
-    rb_values.add_child(this._currentWeatherFeelsLike);
-    rb_captions.add_child(
-      new St.Label({
-        text: _("Humidity:"),
-      })
-    );
-    rb_values.add_child(this._currentWeatherHumidity);
-    rb_captions.add_child(
-      new St.Label({
-        text: _("Pressure:"),
-      })
-    );
-    rb_values.add_child(this._currentWeatherPressure);
-    rb_captions.add_child(
-      new St.Label({
-        text: _("Wind:"),
-      })
-    );
-    rb_values.add_child(this._currentWeatherWind);
-    rb_captions.add_child(
-      new St.Label({
-        text: _("Gusts:"),
-      })
-    );
-    rb_values.add_child(this._currentWeatherWindGusts);
+    add_childern(rb, rb_captions, rb_values);
+     
+    add_childern(rb_captions, new St.Label({ text: _("Feels Like:") }));
+    
+    add_childern(rb_values, this._currentWeatherFeelsLike);
+    
+    add_childern(rb_captions, new St.Label({ text: _("Humidity:") }));
+
+    add_childern(rb_values, this._currentWeatherHumidity);
+
+    add_childern(rb_captions, new St.Label({ text: _("Pressure:") }));
+
+    add_childern(rb_values, this._currentWeatherPressure);
+
+    add_childern(rb_captions, new St.Label({ text: _("Wind:") }));
+    
+    add_childern(rb_values, this._currentWeatherWind);
+    
+    add_childern(rb_captions, new St.Label({ text: _("Gusts:") }));
+    
+    add_childern(rb_values, this._currentWeatherWindGusts);
 
     let xb = new St.BoxLayout({
       x_expand: true,
     });
-    xb.add_child(bb);
-    xb.add_child(rb);
+    
+    add_childern(xb, bb, rb);
 
     let box = new St.BoxLayout({
       x_expand: true,
       style_class: "openweather-current-iconbox",
     });
-    box.add_child(this._currentWeatherIcon);
-    box.add_child(xb);
-    this._currentWeather.actor.add_child(box);
+    
+    add_childern(box, this._currentWeatherIcon, xb);
 
+    add_childern(this._currentWeather.actor, box);
+    
     // Today's forecast if not disabled by user
     if (this._isForecastDisabled) return;
 
@@ -1415,17 +1425,18 @@ class OpenWeatherMenuButton extends PanelMenu.Button {
         style_class: "openweather-forecast-iconbox",
       });
 
-      fib.add_child(todaysForecast.Icon);
-      fib.add_child(todaysForecast.Temperature);
+      add_childern(fib, todaysForecast.Icon, todaysForecast.Temperature);
 
-      fb.add_child(todaysForecast.Time);
-      fb.add_child(fib);
-      if (this._comment_in_forecast) fb.add_child(todaysForecast.Summary);
+      add_childern(fb, todaysForecast.Time, fib);
+      
+      if (this._comment_in_forecast) add_childern(fb, todaysForecast.Summary);
 
       this._todays_forecast[i] = todaysForecast;
-      this._todaysBox.add_child(fb);
+      add_childern(this._todaysBox, fb);
+
     }
-    this._currentForecast.actor.add_child(this._todaysBox);
+    
+    add_childern(this._currentForecast.actor, this._todaysBox);
   }
 
   scrollForecastBy(delta) {
@@ -1443,7 +1454,8 @@ class OpenWeatherMenuButton extends PanelMenu.Button {
       opacity: 150,
       style_class: "openweather-forecast-expander",
     });
-    this._forecastExpander.menu.box.add_child(this._forecastExpanderBox);
+
+    add_childern(this._forecastExpander.menu.box, this._forecastExpanderBox);
 
     this._daysBox = new St.BoxLayout({
       vertical: true,
@@ -1499,7 +1511,8 @@ class OpenWeatherMenuButton extends PanelMenu.Button {
       forecastWeather.Day = new St.Label({
         style_class: "openweather-forecast-day",
       });
-      this._daysBox.add_child(forecastWeather.Day);
+      
+      add_childern(this._daysBox, forecastWeather.Day);
 
       let forecastWeatherBox = new St.BoxLayout({
         x_expand: true,
@@ -1537,20 +1550,23 @@ class OpenWeatherMenuButton extends PanelMenu.Button {
           style_class: "openweather-forecast-iconbox",
         });
 
-        bib.add_child(forecastWeather[j].Icon);
-        bib.add_child(forecastWeather[j].Temperature);
+        add_childern(bib, forecastWeather[j].Icon, forecastWeather[j].Temperature);
 
-        by.add_child(forecastWeather[j].Time);
-        by.add_child(bib);
-        if (this._comment_in_forecast) by.add_child(forecastWeather[j].Summary);
-        forecastWeatherBox.add_child(by);
+        add_childern(by, forecastWeather[j].Time, bib);
+        
+        if (this._comment_in_forecast) add_childern(by, forecastWeather[j].Summary);
+        
+        add_childern(forecastWeatherBox, by);
       }
       this._forecast[i] = forecastWeather;
-      this._forecastBox.add_child(forecastWeatherBox);
+      
+      add_childern(this._forecastBox, forecastWeatherBox);
     }
-    this._forecastScrollBox.add_child(this._forecastBox);
-    this._forecastExpanderBox.add_child(this._daysBox);
-    this._forecastExpanderBox.add_child(this._forecastScrollBox);
+
+    add_childern(this._forecastScrollBox, this._forecastBox);
+    
+    add_childern(this._forecastExpanderBox, this._daysBox, this._forecastScrollBox);
+    
   }
 
   _onScroll(actor, event) {
